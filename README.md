@@ -28,7 +28,7 @@ go run cmd/main.go
 Run the script regularly to watch for updates (e.g.: a crontab):
 ```crontab
 # Every 10 minutes
-*/10 * * * * /usr/local/go/bin/go run /home/gobtronic/steam-purchase-notifier/cmd/main.go >> /home/gobtronic/steam-purchase-notifier/cron.log 2>&1
+*/10 * * * * /usr/local/go/bin/go -C /home/gobtronic/steam-purchase-notifier run ./cmd/main.go >> /home/gobtronic/steam-purchase-notifier/cron.log 2>&1
 ```
 
 ## How it works
