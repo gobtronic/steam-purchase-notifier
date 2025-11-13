@@ -1,4 +1,4 @@
-# steam-purchase-notifier
+# steam-purchase-notifier 🔔
 Watch a Steam account purchases through notifications
 
 <p align="center">
