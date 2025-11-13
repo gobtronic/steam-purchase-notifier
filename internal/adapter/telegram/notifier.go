@@ -27,7 +27,7 @@ func NewTelegramNotifier(botToken string, chatID int64) *TelegramNotifier {
 func (n *TelegramNotifier) Notify(game domain.Game) error {
 	text := fmt.Sprintf(`*%s*
 
-*[%s](%s)*`, sanitizeString("💸 A new game available in your Steam Family library!"), sanitizeString(game.Name), sanitizeString(game.StoreURL))
+*[%s](%s)*`, sanitizeString("💸 A new game is available in your Steam Family library!"), sanitizeString(game.Name), sanitizeString(game.StoreURL))
 	return n.notify(text, dictionary{})
 }
 
