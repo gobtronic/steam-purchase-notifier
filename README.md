@@ -10,7 +10,7 @@ I wanted to let my Steam Family members know when I buy a new game so I made thi
 
 ## How to use
 ### Prerequisites
-- `go >= 1.24.5`
+- `go >= 1.25.4`
 
 The following env vars (you can use an `.env` file):
 - `STEAM_API_KEY` Your Steam API key
