@@ -1,5 +1,5 @@
 # steam-purchase-notifier
-Watch a Steam account purchases through Telegram notifications
+Watch a Steam account purchases through notifications
 
 <p align="center">
   <img src="screenshot.png" alt="steam-purchase-notifier screenshot" width="450px" />
