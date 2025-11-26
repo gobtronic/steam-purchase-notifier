@@ -10,6 +10,7 @@ import (
 	"github.com/gobtronic/steam-purchase-notifier/internal/adapter/gamestore"
 	"github.com/gobtronic/steam-purchase-notifier/internal/adapter/steam"
 	"github.com/gobtronic/steam-purchase-notifier/internal/adapter/telegram"
+	"github.com/gobtronic/steam-purchase-notifier/internal/domain"
 	"github.com/gobtronic/steam-purchase-notifier/internal/port"
 	"github.com/gobtronic/steam-purchase-notifier/internal/usecase"
 	"github.com/spf13/cobra"
@@ -47,18 +48,28 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
-		games, err := steamClient.FetchGames()
-		if err != nil {
-			log.Fatal(err)
-		}
-		newGames, _ := usecase.FilterNewGames(games, gameStore)
-		gameStore.Write(games)
 
-		if len(games) != len(newGames) {
-			for _, notifier := range notifiers {
-				usecase.NotifyGames(newGames, notifier)
+		var usersGames []domain.UserGames
+		for _, steamID := range steamClient.SteamIDs {
+			games, err := steamClient.FetchGames(steamID)
+			if err != nil {
+				log.Println(err)
+				continue
 			}
+			userGames := domain.UserGames{
+				SteamID: steamID,
+				Games:   games,
+			}
+			usersGames = append(usersGames, userGames)
+			newGames, _ := usecase.FilterNewGames(userGames, gameStore)
+			if len(newGames) > 0 && len(games) != len(newGames) {
+				for _, notifier := range notifiers {
+					usecase.NotifyGames(newGames, notifier)
+				}
+			}
+
 		}
+		gameStore.Write(usersGames)
 	},
 }
 

@@ -19,14 +19,29 @@ func NewGameStore() (*GameStore, error) {
 	}, nil
 }
 
-func (s *GameStore) Write(games []domain.Game) error {
+func (s *GameStore) Write(games []domain.UserGames) error {
+	dto, _ := s.read()
+	for _, g := range games {
+		cachedUserIndex := -1
+		for i, u := range dto.Users {
+			if u.SteamID == g.SteamID {
+				cachedUserIndex = i
+				break
+			}
+		}
+		if cachedUserIndex >= 0 {
+			dto.Users[cachedUserIndex] = gamesToUserDTO(g)
+		} else {
+			dto.Users = append(dto.Users, gamesToUserDTO(g))
+		}
+	}
+
 	file, err := os.Create(s.filePath)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	dto := gamesToStoreDTO(games)
 	encoder := json.NewEncoder(file)
 	if err := encoder.Encode(dto); err != nil {
 		return err
@@ -34,17 +49,25 @@ func (s *GameStore) Write(games []domain.Game) error {
 	return nil
 }
 
-func (s *GameStore) Read() ([]int, error) {
+func (s *GameStore) Read() ([]domain.UserAppIDs, error) {
+	dto, err := s.read()
+	if err != nil {
+		return []domain.UserAppIDs{}, err
+	}
+	return userDTOsToDomain(dto), nil
+}
+
+func (s *GameStore) read() (storeDTO, error) {
 	file, err := os.Open(s.filePath)
 	if err != nil {
-		return []int{}, err
+		return storeDTO{}, err
 	}
 	defer file.Close()
 
 	var dto storeDTO
 	decoder := json.NewDecoder(file)
 	if err := decoder.Decode(&dto); err != nil {
-		return []int{}, err
+		return storeDTO{}, err
 	}
-	return dto.AppIDs, err
+	return dto, nil
 }

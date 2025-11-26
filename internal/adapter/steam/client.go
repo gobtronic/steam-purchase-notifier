@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/gobtronic/steam-purchase-notifier/internal/domain"
 )
@@ -15,9 +16,9 @@ import (
 const STEAM_API_BASE_URL = "https://api.steampowered.com/"
 
 type SteamClient struct {
-	apiKey  string
-	steamID string
-	client  *http.Client
+	apiKey   string
+	SteamIDs []string
+	client   *http.Client
 }
 
 func NewSteamClient(client *http.Client) (*SteamClient, error) {
@@ -25,18 +26,19 @@ func NewSteamClient(client *http.Client) (*SteamClient, error) {
 	if apiKey == "" {
 		return &SteamClient{}, fmt.Errorf("Please set the STEAM_API_KEY environment variable with your Steam API key")
 	}
-	steamID := os.Getenv("STEAM_ID")
+	steamID := os.Getenv("STEAM_IDS")
 	if steamID == "" {
-		return &SteamClient{}, fmt.Errorf("Please set the STEAM_ID environment variable with Steam ID that will be watched")
+		return &SteamClient{}, fmt.Errorf("Please set the STEAM_IDS environment variable with Steam IDs that will be watched (separated by commas)")
 	}
+	steamIDs := strings.Split(steamID, ",")
 	return &SteamClient{
-		apiKey:  apiKey,
-		steamID: steamID,
-		client:  client,
+		apiKey:   apiKey,
+		SteamIDs: steamIDs,
+		client:   client,
 	}, nil
 }
 
-func (c *SteamClient) FetchGames() ([]domain.Game, error) {
+func (c *SteamClient) FetchGames(userID string) ([]domain.Game, error) {
 	u, err := url.Parse(STEAM_API_BASE_URL)
 	if err != nil {
 		return []domain.Game{}, err
@@ -44,7 +46,7 @@ func (c *SteamClient) FetchGames() ([]domain.Game, error) {
 	u.Path = path.Join(u.Path, "IPlayerService/GetOwnedGames/v1")
 	params := url.Values{}
 	params.Set("key", c.apiKey)
-	params.Set("steamid", c.steamID)
+	params.Set("steamid", userID)
 	params.Set("include_appinfo", "true")
 	params.Set("include_played_free_games", "true")
 	u.RawQuery = params.Encode()

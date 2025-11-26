@@ -5,3 +5,13 @@ type Game struct {
 	Name     string
 	StoreURL string
 }
+
+type UserGames struct {
+	SteamID string
+	Games   []Game
+}
+
+type UserAppIDs struct {
+	SteamID string
+	AppIDs  []int
+}
