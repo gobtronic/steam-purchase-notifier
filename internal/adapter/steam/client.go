@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/gobtronic/steam-purchase-notifier/internal/domain"
@@ -16,12 +17,13 @@ import (
 const STEAM_API_BASE_URL = "https://api.steampowered.com/"
 
 type SteamClient struct {
-	apiKey   string
-	SteamIDs []string
-	client   *http.Client
+	apiKey           string
+	SteamIDs         []string
+	includeFreeGames bool
+	client           *http.Client
 }
 
-func NewSteamClient(client *http.Client) (*SteamClient, error) {
+func NewSteamClient(includeFreeGames bool, client *http.Client) (*SteamClient, error) {
 	apiKey := os.Getenv("STEAM_API_KEY")
 	if apiKey == "" {
 		return &SteamClient{}, fmt.Errorf("Please set the STEAM_API_KEY environment variable with your Steam API key")
@@ -32,9 +34,10 @@ func NewSteamClient(client *http.Client) (*SteamClient, error) {
 	}
 	steamIDs := strings.Split(steamID, ",")
 	return &SteamClient{
-		apiKey:   apiKey,
-		SteamIDs: steamIDs,
-		client:   client,
+		apiKey:           apiKey,
+		SteamIDs:         steamIDs,
+		includeFreeGames: includeFreeGames,
+		client:           client,
 	}, nil
 }
 
@@ -48,7 +51,7 @@ func (c *SteamClient) FetchGames(userID string) ([]domain.Game, error) {
 	params.Set("key", c.apiKey)
 	params.Set("steamid", userID)
 	params.Set("include_appinfo", "true")
-	params.Set("include_played_free_games", "true")
+	params.Set("include_played_free_games", strconv.FormatBool(c.includeFreeGames))
 	u.RawQuery = params.Encode()
 	req, err := http.NewRequest(http.MethodGet, u.String(), nil)
 	if err != nil {

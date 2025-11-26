@@ -16,13 +16,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var telegramNotifier bool
-var discordNotifier bool
+var (
+	telegramNotifier       bool
+	discordNotifier        bool
+	includePlayedFreeGames bool
+)
 var rootCmd = &cobra.Command{
 	Use:   "steam-purchase-notifier",
 	Short: "Watch a Steam account purchases through notifications",
 	Run: func(cmd *cobra.Command, args []string) {
-		steamClient, err := steam.NewSteamClient(http.DefaultClient)
+		steamClient, err := steam.NewSteamClient(includePlayedFreeGames, http.DefaultClient)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -81,6 +84,7 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.Flags().BoolVar(&telegramNotifier, "telegram", false, "telegram")
-	rootCmd.Flags().BoolVar(&discordNotifier, "discord", false, "discord")
+	rootCmd.Flags().BoolVar(&telegramNotifier, "telegram", false, "enable Telegram notifier")
+	rootCmd.Flags().BoolVar(&discordNotifier, "discord", false, "enable Discord notifier")
+	rootCmd.Flags().BoolVar(&includePlayedFreeGames, "include-free", false, "enable notifications for played free games")
 }
