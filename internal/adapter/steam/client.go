@@ -2,9 +2,11 @@ package steam
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 
 	"github.com/gobtronic/steam-purchase-notifier/internal/domain"
@@ -18,12 +20,20 @@ type SteamClient struct {
 	client  *http.Client
 }
 
-func NewSteamClient(apiKey, steamID string, client *http.Client) *SteamClient {
+func NewSteamClient(client *http.Client) (*SteamClient, error) {
+	apiKey := os.Getenv("STEAM_API_KEY")
+	if apiKey == "" {
+		return &SteamClient{}, fmt.Errorf("Please set the STEAM_API_KEY environment variable with your Steam API key")
+	}
+	steamID := os.Getenv("STEAM_ID")
+	if steamID == "" {
+		return &SteamClient{}, fmt.Errorf("Please set the STEAM_ID environment variable with Steam ID that will be watched")
+	}
 	return &SteamClient{
 		apiKey:  apiKey,
 		steamID: steamID,
 		client:  client,
-	}
+	}, nil
 }
 
 func (c *SteamClient) FetchGames() ([]domain.Game, error) {

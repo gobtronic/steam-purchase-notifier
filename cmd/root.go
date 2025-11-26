@@ -5,14 +5,12 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path"
 
 	"github.com/gobtronic/steam-purchase-notifier/internal/adapter/gamestore"
 	"github.com/gobtronic/steam-purchase-notifier/internal/adapter/steam"
 	"github.com/gobtronic/steam-purchase-notifier/internal/adapter/telegram"
 	"github.com/gobtronic/steam-purchase-notifier/internal/port"
 	"github.com/gobtronic/steam-purchase-notifier/internal/usecase"
-	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 )
 
@@ -20,28 +18,28 @@ var telegramNotifier bool
 var rootCmd = &cobra.Command{
 	Use:   "steam-purchase-notifier",
 	Short: "Watch a Steam account purchases through notifications",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		cfg, err := loadConfig()
+	Run: func(cmd *cobra.Command, args []string) {
+		steamClient, err := steam.NewSteamClient(http.DefaultClient)
 		if err != nil {
-			return err
+			log.Fatal(err)
 		}
 
 		var notifiers []port.Notifier
 		if telegramNotifier {
-			telegramCfg, err := telegram.LoadConfig()
+			notifier, err := telegram.NewTelegramNotifier()
 			if err != nil {
-				return err
+				log.Fatal(err)
 			}
-			notifier := telegram.NewTelegramNotifier(telegramCfg)
 			notifiers = append(notifiers, notifier)
 		}
 
-		steamClient := steam.NewSteamClient(cfg.steamAPIKey, cfg.steamID, http.DefaultClient)
-		gameStoreFilePath := path.Join(os.Getenv("GOPATH"), "gamelist.json")
-		gameStore := gamestore.NewGameStore(gameStoreFilePath)
+		gameStore, err := gamestore.NewGameStore()
+		if err != nil {
+			log.Fatal(err)
+		}
 		games, err := steamClient.FetchGames()
 		if err != nil {
-			return err
+			log.Fatal(err)
 		}
 		newGames, _ := usecase.FilterNewGames(games, gameStore)
 		gameStore.Write(games)
@@ -51,7 +49,6 @@ var rootCmd = &cobra.Command{
 				usecase.NotifyGames(newGames, notifier)
 			}
 		}
-		return nil
 	},
 }
 
@@ -72,7 +69,6 @@ type config struct {
 }
 
 func loadConfig() (config, error) {
-	godotenv.Load()
 	steamAPIKey := os.Getenv("STEAM_API_KEY")
 	if steamAPIKey == "" {
 		log.Fatal("Please set the STEAM_API_KEY environment variable with your Steam API key")

@@ -3,6 +3,7 @@ package gamestore
 import (
 	"encoding/json"
 	"os"
+	"path"
 
 	"github.com/gobtronic/steam-purchase-notifier/internal/domain"
 )
@@ -11,10 +12,11 @@ type GameStore struct {
 	filePath string
 }
 
-func NewGameStore(filePath string) *GameStore {
+func NewGameStore() (*GameStore, error) {
+	filePath := path.Join(os.Getenv("GOPATH"), "gamelist.json")
 	return &GameStore{
 		filePath: filePath,
-	}
+	}, nil
 }
 
 func (s *GameStore) Write(games []domain.Game) error {

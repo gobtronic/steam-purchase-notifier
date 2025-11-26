@@ -4,8 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"maps"
 	"net/http"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -13,13 +16,28 @@ import (
 )
 
 type TelegramNotifier struct {
-	config *Config
+	botToken string
+	chatID   int64
 }
 
-func NewTelegramNotifier(config *Config) *TelegramNotifier {
-	return &TelegramNotifier{
-		config: config,
+func NewTelegramNotifier() (*TelegramNotifier, error) {
+	botToken := os.Getenv("TELEGRAM_BOT_TOKEN")
+	if botToken == "" {
+		log.Fatal("Please set the TELEGRAM_BOT_TOKEN environment variable with your Telegram bot token")
 	}
+	envTelegramChatID := os.Getenv("TELEGRAM_CHAT_ID")
+	if envTelegramChatID == "" {
+		log.Fatal("Please set the TELEGRAM_CHAT_ID environment variable with your Telegram chat ID")
+	}
+	telegramChatID, err := strconv.Atoi(envTelegramChatID)
+	if err != nil {
+		log.Fatal(err)
+	}
+	chatID := int64(telegramChatID)
+	return &TelegramNotifier{
+		botToken: botToken,
+		chatID:   chatID,
+	}, nil
 }
 
 func (n *TelegramNotifier) Notify(game domain.Game) error {
@@ -37,7 +55,7 @@ func (n *TelegramNotifier) notify(text string, additionalInfo dictionary) error 
 		return err
 	}
 	bodyReader := bytes.NewReader(payload)
-	url := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", n.config.BotToken)
+	url := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", n.botToken)
 	req, err := http.NewRequest(http.MethodGet, url, bodyReader)
 	req.Header.Set("Accept", "*/*")
 	req.Header.Set("Content-Type", "application/json")
@@ -56,7 +74,7 @@ func (n *TelegramNotifier) notify(text string, additionalInfo dictionary) error 
 
 func (n *TelegramNotifier) buildPayload(text string, additionalInfo dictionary) ([]byte, error) {
 	data := dictionary{
-		"chat_id":    n.config.ChatID,
+		"chat_id":    n.chatID,
 		"text":       text,
 		"parse_mode": "MarkdownV2",
 	}
