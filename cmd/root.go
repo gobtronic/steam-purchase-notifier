@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gobtronic/steam-purchase-notifier/internal/adapter/discord"
 	"github.com/gobtronic/steam-purchase-notifier/internal/adapter/gamestore"
 	"github.com/gobtronic/steam-purchase-notifier/internal/adapter/steam"
 	"github.com/gobtronic/steam-purchase-notifier/internal/adapter/telegram"
@@ -15,6 +16,7 @@ import (
 )
 
 var telegramNotifier bool
+var discordNotifier bool
 var rootCmd = &cobra.Command{
 	Use:   "steam-purchase-notifier",
 	Short: "Watch a Steam account purchases through notifications",
@@ -27,6 +29,14 @@ var rootCmd = &cobra.Command{
 		var notifiers []port.Notifier
 		if telegramNotifier {
 			notifier, err := telegram.NewTelegramNotifier()
+			if err != nil {
+				log.Fatal(err)
+			}
+			notifiers = append(notifiers, notifier)
+		}
+
+		if discordNotifier {
+			notifier, err := discord.NewDiscordNotifier()
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -61,27 +71,5 @@ func Execute() {
 
 func init() {
 	rootCmd.Flags().BoolVar(&telegramNotifier, "telegram", false, "telegram")
-}
-
-type config struct {
-	steamAPIKey string
-	steamID     string
-}
-
-func loadConfig() (config, error) {
-	steamAPIKey := os.Getenv("STEAM_API_KEY")
-	if steamAPIKey == "" {
-		log.Fatal("Please set the STEAM_API_KEY environment variable with your Steam API key")
-	}
-	steamID := os.Getenv("STEAM_ID")
-	if steamID == "" {
-		log.Fatal("Please set the STEAM_ID environment variable with Steam ID that will be watched")
-	}
-
-	cfg := config{
-		steamAPIKey: steamAPIKey,
-		steamID:     steamID,
-	}
-
-	return cfg, nil
+	rootCmd.Flags().BoolVar(&discordNotifier, "discord", false, "discord")
 }

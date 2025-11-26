@@ -17,6 +17,8 @@ The following env vars (you can use an `.env` file):
 - `STEAM_ID` The account's Steam ID you want to monitor
 - `TELEGRAM_BOT_TOKEN` Your Telegram bot token for notifications
 - `TELEGRAM_CHAT_ID` The Telegram chat ID the bot will send messages to
+- `DISCORD_BOT_TOKEN` Your Discord bot token for notifications
+- `DISCORD_CHANNEL_ID` The Discord channel ID the bot will send messages to
 
 ### Run
 ```bash
