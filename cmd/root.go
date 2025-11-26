@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"strconv"
 
 	"github.com/gobtronic/steam-purchase-notifier/internal/adapter/gamestore"
 	"github.com/gobtronic/steam-purchase-notifier/internal/adapter/steam"
@@ -22,10 +21,6 @@ var rootCmd = &cobra.Command{
 	Use:   "steam-purchase-notifier",
 	Short: "Watch a Steam account purchases through notifications",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if !telegramNotifier {
-			return fmt.Errorf("you must specify at least one notifier flag, e.g. --telegram")
-		}
-
 		cfg, err := loadConfig()
 		if err != nil {
 			return err
@@ -33,7 +28,11 @@ var rootCmd = &cobra.Command{
 
 		var notifiers []port.Notifier
 		if telegramNotifier {
-			notifier := telegram.NewTelegramNotifier(*cfg.telegramBotToken, *cfg.telegramChatID)
+			telegramCfg, err := telegram.LoadConfig()
+			if err != nil {
+				return err
+			}
+			notifier := telegram.NewTelegramNotifier(telegramCfg)
 			notifiers = append(notifiers, notifier)
 		}
 
@@ -44,10 +43,7 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		newGames, err := usecase.FilterNewGames(games, gameStore)
-		if err != nil {
-			return err
-		}
+		newGames, _ := usecase.FilterNewGames(games, gameStore)
 		gameStore.Write(games)
 
 		if len(games) != len(newGames) {
@@ -71,10 +67,8 @@ func init() {
 }
 
 type config struct {
-	steamAPIKey      string
-	steamID          string
-	telegramBotToken *string
-	telegramChatID   *int64
+	steamAPIKey string
+	steamID     string
 }
 
 func loadConfig() (config, error) {
@@ -91,24 +85,6 @@ func loadConfig() (config, error) {
 	cfg := config{
 		steamAPIKey: steamAPIKey,
 		steamID:     steamID,
-	}
-
-	if telegramNotifier {
-		telegramBotToken := os.Getenv("TELEGRAM_BOT_TOKEN")
-		if telegramBotToken == "" {
-			log.Fatal("Please set the TELEGRAM_BOT_TOKEN environment variable with your Telegram bot token")
-		}
-		envTelegramChatID := os.Getenv("TELEGRAM_CHAT_ID")
-		if envTelegramChatID == "" {
-			log.Fatal("Please set the TELEGRAM_CHAT_ID environment variable with your Telegram chat ID")
-		}
-		telegramChatID, err := strconv.Atoi(envTelegramChatID)
-		if err != nil {
-			log.Fatal(err)
-		}
-		chatID := int64(telegramChatID)
-		cfg.telegramBotToken = &telegramBotToken
-		cfg.telegramChatID = &chatID
 	}
 
 	return cfg, nil

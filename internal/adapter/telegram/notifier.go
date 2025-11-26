@@ -13,14 +13,12 @@ import (
 )
 
 type TelegramNotifier struct {
-	botToken string
-	chatID   int64
+	config *Config
 }
 
-func NewTelegramNotifier(botToken string, chatID int64) *TelegramNotifier {
+func NewTelegramNotifier(config *Config) *TelegramNotifier {
 	return &TelegramNotifier{
-		botToken: botToken,
-		chatID:   chatID,
+		config: config,
 	}
 }
 
@@ -39,7 +37,7 @@ func (n *TelegramNotifier) notify(text string, additionalInfo dictionary) error 
 		return err
 	}
 	bodyReader := bytes.NewReader(payload)
-	url := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", n.botToken)
+	url := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", n.config.BotToken)
 	req, err := http.NewRequest(http.MethodGet, url, bodyReader)
 	req.Header.Set("Accept", "*/*")
 	req.Header.Set("Content-Type", "application/json")
@@ -58,7 +56,7 @@ func (n *TelegramNotifier) notify(text string, additionalInfo dictionary) error 
 
 func (n *TelegramNotifier) buildPayload(text string, additionalInfo dictionary) ([]byte, error) {
 	data := dictionary{
-		"chat_id":    n.chatID,
+		"chat_id":    n.config.ChatID,
 		"text":       text,
 		"parse_mode": "MarkdownV2",
 	}
