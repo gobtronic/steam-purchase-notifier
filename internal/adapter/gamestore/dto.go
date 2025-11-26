@@ -1,10 +1,10 @@
 package gamestore
 
 type storeDTO struct {
-	Users []userDTO `json:"users"`
+	Libraries []libraryDTO `json:"libraries"`
 }
 
-type userDTO struct {
+type libraryDTO struct {
 	SteamID string `json:"steam_id"`
 	AppIDs  []int  `json:"app_ids"`
 }

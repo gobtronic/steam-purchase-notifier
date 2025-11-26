@@ -19,20 +19,20 @@ func NewGameStore() (*GameStore, error) {
 	}, nil
 }
 
-func (s *GameStore) Write(games []domain.UserGames) error {
+func (s *GameStore) Write(library []domain.Library) error {
 	dto, _ := s.read()
-	for _, g := range games {
+	for _, lb := range library {
 		cachedUserIndex := -1
-		for i, u := range dto.Users {
-			if u.SteamID == g.SteamID {
+		for i, u := range dto.Libraries {
+			if u.SteamID == lb.SteamID {
 				cachedUserIndex = i
 				break
 			}
 		}
 		if cachedUserIndex >= 0 {
-			dto.Users[cachedUserIndex] = gamesToUserDTO(g)
+			dto.Libraries[cachedUserIndex] = libraryToDTO(lb)
 		} else {
-			dto.Users = append(dto.Users, gamesToUserDTO(g))
+			dto.Libraries = append(dto.Libraries, libraryToDTO(lb))
 		}
 	}
 
@@ -49,12 +49,12 @@ func (s *GameStore) Write(games []domain.UserGames) error {
 	return nil
 }
 
-func (s *GameStore) Read() ([]domain.UserAppIDs, error) {
+func (s *GameStore) Read() ([]domain.Library, error) {
 	dto, err := s.read()
 	if err != nil {
-		return []domain.UserAppIDs{}, err
+		return []domain.Library{}, err
 	}
-	return userDTOsToDomain(dto), nil
+	return storeDTOToDomain(dto), nil
 }
 
 func (s *GameStore) read() (storeDTO, error) {

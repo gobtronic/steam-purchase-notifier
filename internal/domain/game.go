@@ -6,12 +6,7 @@ type Game struct {
 	StoreURL string
 }
 
-type UserGames struct {
+type Library struct {
 	SteamID string
 	Games   []Game
-}
-
-type UserAppIDs struct {
-	SteamID string
-	AppIDs  []int
 }

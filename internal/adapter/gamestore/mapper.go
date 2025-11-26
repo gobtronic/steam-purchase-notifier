@@ -2,23 +2,29 @@ package gamestore
 
 import "github.com/gobtronic/steam-purchase-notifier/internal/domain"
 
-func gamesToUserDTO(ug domain.UserGames) userDTO {
+func libraryToDTO(library domain.Library) libraryDTO {
 	var appIDs []int
-	for _, g := range ug.Games {
+	for _, g := range library.Games {
 		appIDs = append(appIDs, g.AppID)
 	}
-	return userDTO{
-		SteamID: ug.SteamID,
+	return libraryDTO{
+		SteamID: library.SteamID,
 		AppIDs:  appIDs,
 	}
 }
 
-func userDTOsToDomain(dto storeDTO) []domain.UserAppIDs {
-	var users []domain.UserAppIDs
-	for _, u := range dto.Users {
-		users = append(users, domain.UserAppIDs{
-			SteamID: u.SteamID,
-			AppIDs:  u.AppIDs,
+func storeDTOToDomain(dto storeDTO) []domain.Library {
+	var users []domain.Library
+	for _, lb := range dto.Libraries {
+		var games []domain.Game
+		for _, v := range lb.AppIDs {
+			games = append(games, domain.Game{
+				AppID: v,
+			})
+		}
+		users = append(users, domain.Library{
+			SteamID: lb.SteamID,
+			Games:   games,
 		})
 	}
 	return users

@@ -49,19 +49,19 @@ var rootCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		var usersGames []domain.UserGames
+		var libraries []domain.Library
 		for _, steamID := range steamClient.SteamIDs {
 			games, err := steamClient.FetchGames(steamID)
 			if err != nil {
 				log.Println(err)
 				continue
 			}
-			userGames := domain.UserGames{
+			library := domain.Library{
 				SteamID: steamID,
 				Games:   games,
 			}
-			usersGames = append(usersGames, userGames)
-			newGames, _ := usecase.FilterNewGames(userGames, gameStore)
+			libraries = append(libraries, library)
+			newGames, _ := usecase.FilterNewGames(library, gameStore)
 			if len(newGames) > 0 && len(games) != len(newGames) {
 				for _, notifier := range notifiers {
 					usecase.NotifyGames(newGames, notifier)
@@ -69,7 +69,7 @@ var rootCmd = &cobra.Command{
 			}
 
 		}
-		gameStore.Write(usersGames)
+		gameStore.Write(libraries)
 	},
 }
 
